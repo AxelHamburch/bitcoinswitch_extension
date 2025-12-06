@@ -3,6 +3,7 @@ import asyncio
 from lnbits.core.models import Payment
 from lnbits.core.services import websocket_manager
 from lnbits.tasks import register_invoice_listener
+from lnbits.utils.exchange_rates import fiat_amount_as_satoshis
 from loguru import logger
 
 from .crud import (
@@ -48,9 +49,14 @@ async def on_invoice_paid(payment: Payment) -> None:
     duration = _switch.duration
 
     if _switch.variable is True:
-        duration = round(
-            (switch_payment.sats / 1000) / _switch.amount * _switch.duration
-        )
+        # Convert configured amount to sats for proper calculation
+        expected_sats = await fiat_amount_as_satoshis(
+            float(_switch.amount), bitcoinswitch.currency
+        ) if bitcoinswitch.currency != "sat" else float(_switch.amount)
+        
+        # Calculate variable duration: (paid_sats / expected_sats) * base_duration
+        paid_sats = switch_payment.sats / 1000  # Convert mSats to Sats
+        duration = round((paid_sats / expected_sats) * _switch.duration)
 
     payload = f"{_switch.pin}-{duration}"
 
