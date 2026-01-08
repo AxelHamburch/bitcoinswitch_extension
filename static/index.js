@@ -47,6 +47,10 @@ window.PageBitcoinswitch = {
           rowsPerPage: 10
         }
       },
+      qrCodeDialog: {
+        show: false,
+        data: null
+      },
       formDialog: {
         show: false,
         data: {
@@ -62,10 +66,15 @@ window.PageBitcoinswitch = {
           disabled: false,
           disposable: true
         }
-      },
-      qrCodeDialog: {
-        show: false,
-        data: null
+      }
+    }
+  },
+  computed: {
+    currencies() {
+      if (this.g.allowedCurrencies.length > 0) {
+        return ['sat', ...this.g.allowedCurrencies]
+      } else {
+        return ['sat', ...this.g.currencies]
       }
     }
   },
@@ -78,6 +87,21 @@ window.PageBitcoinswitch = {
     }
   },
   methods: {
+    clearFormDialog() {
+      this.formDialog.data = {
+        switches: [],
+        lnurl_toggle: false,
+        show_message: false,
+        show_ack: false,
+        show_price: 'None',
+        device: 'pos',
+        profit: 1,
+        amount: 1,
+        title: '',
+        disabled: false,
+        disposable: true
+      }
+    },
     openPublicLink(id) {
       window.open(`/bitcoinswitch/public/${id}`, '_blank')
     },
@@ -111,15 +135,6 @@ window.PageBitcoinswitch = {
     removeSwitch() {
       this.formDialog.data.switches.pop()
     },
-    clearFormDialog() {
-      this.formDialog.data = {
-        lnurl_toggle: false,
-        show_message: false,
-        show_ack: false,
-        show_price: 'None',
-        title: ''
-      }
-    },
     cancelFormDialog() {
       this.formDialog.show = false
       this.clearFormDialog()
@@ -127,11 +142,6 @@ window.PageBitcoinswitch = {
     closeFormDialog() {
       this.clearFormDialog()
       this.formDialog.show = false
-      this.formDialog.data = {
-        is_unique: false,
-        disabled: false,
-        disposable: true
-      }
     },
     sendFormData() {
       if (this.formDialog.data.id) {
